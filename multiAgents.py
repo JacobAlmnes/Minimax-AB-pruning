@@ -140,63 +140,60 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        return self.getMinimaxValue(gameState, self.index)
         # util.raiseNotDefined()
 
-    def getMinimaxValue(self, gameState, agentIndex):
-        # FIXME: Correct when to win or lose
-        if gameState.isWin() or gameState.isLose() or self.depth == 0:
-            return self.evaluationFunction(gameState)
+        def getMinimaxValue(gameState, agentIndex):
+            # FIXME: Correct when to win or lose
+            if gameState.isWin() or gameState.isLose() or self.depth == 0:
+                return self.evaluationFunction(gameState)
 
-        if agentIndex == 0:
-            value, move = self.getMaxValue(gameState, agentIndex, depth=0)
-        else:
-            value, move = self.getMinValue(gameState, agentIndex, depth=0)
-        # value, move = self.getMaxValue(gameState, agentIndex, depth=0)
-        return move
-
-
-    def checkEndState(self, gameState, depth, agentIndex):
-        return gameState.isWin() or gameState.isLose() or self.depth * gameState.getNumAgents() == depth
-            
-
-    def getMaxValue(self, gameState, agentIndex, depth):
-        if self.checkEndState(gameState, depth, agentIndex):
-            return self.evaluationFunction(gameState), None
-
-        v = None
-        move = None
-        newAgentIndex = agentIndex + 1
-        for action in gameState.getLegalActions(newAgentIndex):
-            v2, a2 = self.getMinValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth+1)
-            if v == None or v2 > v:
-                v = v2
-                move = action
-        return v, move
-
-
-    def getMinValue(self, gameState, agentIndex, depth):
-        if gameState.isWin():
-            return self.evaluationFunction(gameState), None
-
-        if gameState.isLose():
-            return self.evaluationFunction(gameState), None
-
-        if self.checkEndState(gameState, depth, agentIndex):
-            return self.evaluationFunction(gameState), None
-
-        v = None
-        move = None
-        newAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
-        for action in gameState.getLegalActions(newAgentIndex):
-            if newAgentIndex == 0:
-                v2, a2 = self.getMaxValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth+1)
+            if agentIndex == 0:
+                value, move = getMaxValue(gameState, agentIndex, depth=0)
             else:
-                v2, a2 = self.getMinValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth+1)
-            if v == None or v2 < v:
-                v = v2
-                move = action
-        return v, move
+                value, move = getMinValue(gameState, agentIndex, depth=0)
+            # value, move = self.getMaxValue(gameState, agentIndex, depth=0)
+            return move
+
+
+        def checkEndState(gameState, depth):
+            return gameState.isWin() or gameState.isLose() or self.depth == depth
+                
+
+        def getMaxValue(gameState, agentIndex, depth):
+            if checkEndState(gameState, depth):
+                return self.evaluationFunction(gameState), None
+
+            v = None
+            move = None
+            newAgentIndex = agentIndex + 1
+            for action in gameState.getLegalActions(newAgentIndex):
+                v2, a2 = getMinValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth)
+                if v == None or v2 > v:
+                    v = v2
+                    move = action
+            return v, move
+
+
+        def getMinValue(gameState, agentIndex, depth):
+            
+            if checkEndState(gameState, depth):
+                return self.evaluationFunction(gameState), None
+
+            v = None
+            move = None
+            newAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            for action in gameState.getLegalActions(newAgentIndex):
+                if newAgentIndex == 0:
+                    v2, a2 = getMaxValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth+1)
+                else:
+                    v2, a2 = getMinValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth)
+                if v == None or v2 < v:
+                    v = v2
+                    move = action
+            return v, move
+
+        return getMinimaxValue(gameState, self.index)
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -208,41 +205,64 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        return self.alphaBeta(gameState, self.index, self.depth, -inf, inf)
-        util.raiseNotDefined()
 
-    def alphaBeta(self, gameState, depth, agentIndex, alpha, beta):
-        if depth == 0 or gameState.isWin() or gameState.isLose():
-            return self.evaluationFunction(gameState)
-        if agentIndex == 0:
-            return self.maxValue(gameState, depth, alpha, beta)
-        else:
-            return self.minValue(gameState, depth, agentIndex, alpha, beta)
+        def alphaBetaSearch(gameState, agentIndex):
+            # FIXME: Correct when to win or lose
+            if gameState.isWin() or gameState.isLose() or self.depth == 0:
+                return self.evaluationFunction(gameState)
 
-    def maxValue(self, gameState, depth, alpha, beta):
-        if depth == 0 or gameState.isWin() or gameState.isLose():
-            return self.evaluationFunction(gameState)
-        v = -inf
-        for action in gameState.getLegalActions(0):
-            v = max(v, self.minValue(gameState.generateSuccessor(0, action), depth, 1, alpha, beta))
-            if v > beta:
-                return v
-            alpha = max(alpha, v)
-        return v
-    
-    def minValue(self, gameState, depth, agentIndex, alpha, beta):
-        if depth == 0 or gameState.isWin() or gameState.isLose():
-            return self.evaluationFunction(gameState)
-        v = inf
-        for action in gameState.getLegalActions(agentIndex):
-            if agentIndex == gameState.getNumAgents() - 1:
-                v = min(v, self.maxValue(gameState.generateSuccessor(agentIndex, action), depth - 1, alpha, beta))
+            if agentIndex == 0:
+                value, move = getMaxValue(gameState, agentIndex, depth=0)
             else:
-                v = min(v, self.minValue(gameState.generateSuccessor(agentIndex, action), depth, agentIndex + 1, alpha, beta))
-            if v < alpha:
-                return v
-            beta = min(beta, v)
-        return v
+                value, move = getMinValue(gameState, agentIndex, depth=0)
+            # value, move = self.getMaxValue(gameState, agentIndex, depth=0)
+            return move
+
+
+        def checkEndState(gameState, depth, agentIndex):
+            return gameState.isWin() or gameState.isLose() or self.depth * gameState.getNumAgents() == depth
+                
+
+        def getMaxValue(gameState, agentIndex, depth):
+            if checkEndState(gameState, depth, agentIndex):
+                return self.evaluationFunction(gameState), None
+
+            v = None
+            move = None
+            newAgentIndex = agentIndex + 1
+            for action in gameState.getLegalActions(newAgentIndex):
+                v2, a2 = getMinValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth+1)
+                if v == None or v2 > v:
+                    v = v2
+                    move = action
+            return v, move
+
+
+        def getMinValue(gameState, agentIndex, depth):
+            if gameState.isWin():
+                return self.evaluationFunction(gameState), None
+
+            if gameState.isLose():
+                return self.evaluationFunction(gameState), None
+
+            if checkEndState(gameState, depth, agentIndex):
+                return self.evaluationFunction(gameState), None
+
+            v = None
+            move = None
+            newAgentIndex = (agentIndex + 1) % gameState.getNumAgents()
+            for action in gameState.getLegalActions(newAgentIndex):
+                if newAgentIndex == 0:
+                    v2, a2 = getMaxValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth+1)
+                else:
+                    v2, a2 = getMinValue(gameState.generateSuccessor(newAgentIndex, action), newAgentIndex, depth+1)
+                if v == None or v2 < v:
+                    v = v2
+                    move = action
+            return v, move
+
+        return alphaBetaSearch(gameState, self.index)
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
